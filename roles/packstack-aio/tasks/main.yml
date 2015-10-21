@@ -1,0 +1,20 @@
+- name: create directory for packstack
+  file:
+    path: /etc/packstack
+    state: directory
+
+- name: create packstack answers file
+  command: >
+    packstack
+    --use-epel={{'y' if use_epel else 'n'}}
+    {% if ntp_servers is defined %}--ntp-servers={{ntp_servers}}{% endif %}
+    --gen-answer-file /etc/packstack/answers.txt
+  args:
+    creates: /etc/packstack/answers.txt
+
+- name: run packstack
+  shell: |
+    packstack --answer-file /etc/packstack/answers.txt &&
+      touch /etc/packstack/ran-packstack
+  args:
+    creates: /etc/packstack/ran-packstack

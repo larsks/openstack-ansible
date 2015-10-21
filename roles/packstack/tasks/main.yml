@@ -1,0 +1,5 @@
+- name: install packstack
+  action: "{{packager}}"
+  args:
+    name: openstack-packstack
+    state: latest

@@ -1,0 +1,12 @@
+- name: install rdo-kilo repository
+  command: "{{packager}} -y install {{kilo_release}}"
+  args:
+    warn: no
+  register: install_kilo_release
+  failed_when: >
+    install_kilo_release.rc != 0
+    and 'Nothing to do' not in install_kilo_release.stderr
+
+- name: set use_epel fact
+  set_fact:
+    use_epel: true

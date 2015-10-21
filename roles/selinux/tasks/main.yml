@@ -1,0 +1,6 @@
+- name: set selinux {{selinux_mode}} (runtime)
+  command: setenforce {% if selinux_mode == "permissive" %}0{% else %}1{% endif %}
+- name: set selinux {{selinux_mode}} (persistent)
+  lineinfile: regexp="^SELINUX="
+              line="SELINUX={{selinux_mode}}"
+              dest=/etc/selinux/config

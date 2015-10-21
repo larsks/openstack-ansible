@@ -1,0 +1,15 @@
+---
+- hosts: all
+  tags:
+    - setup
+  roles:
+    - selinux
+    - rdo-kilo
+    - upgrade
+    - diagtools
+
+- hosts: controllers
+  tags:
+    - packstack
+  roles:
+    - packstack-aio

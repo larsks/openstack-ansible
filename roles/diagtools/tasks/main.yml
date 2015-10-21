@@ -1,0 +1,6 @@
+- name: install diagnostic tools
+  action: "{{packager}}"
+  args:
+    name: "{{item}}"
+    state: latest
+  with_items: diagtools_packages

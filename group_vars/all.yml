@@ -1,0 +1,3 @@
+packager: yum
+ntp_servers: clock.redhat.com
+selinux_mode: permissive
