@@ -17,7 +17,7 @@
   roles:
     - packstack-aio
 
-- name: retreive generated credentials
+- name: retrieve generated credentials
   hosts: controller0
   tags:
     - creds
@@ -75,24 +75,18 @@
     - openstack
   tasks:
     - name: upload ssh key to nova
-      tags: 
-        - ssh
       os_keypair:
         auth: "{{demo_creds}}"
         public_key_file: files/lars_redhat.pub
         name: lars
 
     - name: allow icmp traffic
-      tags:
-        - nova
       os_security_group_rule:
         auth: "{{demo_creds}}"
         protocol: icmp
         security_group: default
 
     - name: allow ssh traffic
-      tags:
-        - nova
       os_security_group_rule:
         auth: "{{demo_creds}}"
         protocol: tcp
@@ -101,8 +95,6 @@
         security_group: default
 
     - name: start a cirros server
-      tags:
-        - nova
       os_server:
         auth: "{{demo_creds}}"
         auto_floating_ip: true
