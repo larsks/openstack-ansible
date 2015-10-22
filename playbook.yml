@@ -1,5 +1,6 @@
 ---
-- hosts: all
+- name: perform basic system setup
+  hosts: all,!localhost
   tags:
     - setup
   roles:
@@ -7,9 +8,107 @@
     - rdo-kilo
     - upgrade
     - diagtools
+    - reboot
 
-- hosts: controllers
+- name: install openstack
+  hosts: controller0
   tags:
     - packstack
   roles:
     - packstack-aio
+
+- name: retreive generated credentials
+  hosts: controller0
+  tags:
+    - creds
+  tasks:
+    - name: copy credentials from remote system
+      fetch:
+        src: "{{item}}"
+        dest: credentials/
+        flat: true
+      with_items:
+        - /root/keystonerc_admin
+        - /root/keystonerc_demo
+
+- name: read credentials into variables
+  hosts: localhost
+  tags:
+    - openstack
+  roles:
+    - role: osclient
+      credentials_file: credentials/keystonerc_admin
+      credentials_fact: admin_creds
+    - role: osclient
+      credentials_file: credentials/keystonerc_demo
+      credentials_fact: demo_creds
+
+- name: basic setup of openstack environment
+  hosts: localhost
+  tags:
+    - openstack
+  tasks:
+    - name: create m1.nano flavor
+      os_nova_flavor:
+        auth: "{{admin_creds}}"
+        name: m1.nano
+        ram: 256
+        disk: 1
+        vcpus: 1
+        wait: yes
+
+    - name: download centos atomic image
+      get_url:
+        dest: images/centos-7-atomic.qcow2
+        url: http://cloud.centos.org/centos/7/atomic/images/CentOS-Atomic-Host-7-GenericCloud.qcow2
+
+    - name: upload centos atomic image to glance
+      os_image:
+        auth: "{{admin_creds}}"
+        name: centos-7-atomic
+        is_public: yes
+        filename: images/centos-7-atomic.qcow2
+
+- name: configure openstack resources
+  hosts: localhost
+  tags:
+    - openstack
+  tasks:
+    - name: upload ssh key to nova
+      tags: 
+        - ssh
+      os_keypair:
+        auth: "{{demo_creds}}"
+        public_key_file: files/lars_redhat.pub
+        name: lars
+
+    - name: allow icmp traffic
+      tags:
+        - nova
+      os_security_group_rule:
+        auth: "{{demo_creds}}"
+        protocol: icmp
+        security_group: default
+
+    - name: allow ssh traffic
+      tags:
+        - nova
+      os_security_group_rule:
+        auth: "{{demo_creds}}"
+        protocol: tcp
+        port_range_min: 22
+        port_range_max: 22
+        security_group: default
+
+    - name: start a cirros server
+      tags:
+        - nova
+      os_server:
+        auth: "{{demo_creds}}"
+        auto_floating_ip: true
+        flavor: m1.nano
+        image: cirros
+        key: lars
+        name: cirros
+        nics:
+          - net-name: private
