@@ -1,3 +1,4 @@
 diagtools_packages:
   - tcpdump
   - strace
+  - screen
