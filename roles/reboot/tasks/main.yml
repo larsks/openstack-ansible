@@ -1,0 +1,14 @@
+- name: reboot system
+  tags:
+    - reboot
+  shell: touch {{reboot_flag}} && reboot
+  args:
+    creates: "{{reboot_flag}}"
+  ignore_errors: true
+- name: wait for system to start back up
+  tags:
+    - reboot
+  wait_for:
+    delay: 10
+    port: 22
+  delegate_to: localhost
